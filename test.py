@@ -11,7 +11,7 @@ from clip_env import ClipEnv
 
 # Test DQN
 def test(args, T, dqn, val_mem, metrics, results_dir, evaluate=False):
-  if args.enable_clip
+  if args.enable_clip:
     env = ClipEnv(args)
   else:
     env = Env(args)
