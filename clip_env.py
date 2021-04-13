@@ -73,7 +73,6 @@ class ClipEnv():
     self.state_buffer.append(observation)
     self.lives = self.ale.lives()
     state = self.get_clip_features(torch.stack(list(self.state_buffer), 0))
-    print(state.shape)
     return state
 
   def step(self, action):

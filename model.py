@@ -78,7 +78,6 @@ class DQN(nn.Module):
     if not self.training:
       print("after x", x.shape)
     x = x.view(-1, self.conv_output_size)
-    print(x.dtype, x.shape)
     v = self.fc_z_v(F.relu(self.fc_h_v(x)))  # Value stream
     a = self.fc_z_a(F.relu(self.fc_h_a(x)))  # Advantage stream
     v, a = v.view(-1, 1, self.atoms), a.view(-1, self.action_space, self.atoms)
