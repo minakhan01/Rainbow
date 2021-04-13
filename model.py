@@ -45,6 +45,14 @@ class NoisyLinear(nn.Module):
     else:
       return F.linear(input, self.weight_mu, self.bias_mu)
 
+class PrintLayer(nn.Module):
+    def __init__(self):
+        super(PrintLayer, self).__init__()
+    
+    def forward(self, x):
+        # Do your print / debug stuff here
+        print(x.shape)
+        return x
 
 class DQN(nn.Module):
   def __init__(self, args, action_space):
@@ -54,10 +62,10 @@ class DQN(nn.Module):
     self.args = args
     if args.enable_clip:
       if args.num_clip_layer == 1:
-        self.dense = nn.Sequential(*[nn.Linear(args.hidden_size, 2048), nn.ReLU()])
+        self.dense = nn.Sequential(*[PrintLayer(), nn.Linear(args.hidden_size, 2048), nn.ReLU()])
         self.conv_output_size = args.hidden_size
       elif args.num_clip_layer > 1:
-        self.dense = nn.Sequential(*([nn.Linear(args.hidden_size, 2048), nn.ReLU()]+[nn.Linear(args.hidden_size, args.hidden_size), nn.ReLU()]*(args.clip_layer-1)))
+        self.dense = nn.Sequential(*([PrintLayer(), nn.Linear(args.hidden_size, 2048), nn.ReLU()]+[PrintLayer(), nn.Linear(args.hidden_size, args.hidden_size), nn.ReLU()]*(args.clip_layer-1)))
         self.conv_output_size = args.hidden_size
       else:
         self.dense = nn.Identity()
