@@ -52,7 +52,7 @@ class DQN(nn.Module):
     super(DQN, self).__init__()
     self.atoms = args.atoms
     self.action_space = action_space
-
+    self.args = args
     if args.enable_clip:
       self.conv_output_size = 2048
     else:
@@ -73,7 +73,7 @@ class DQN(nn.Module):
   def forward(self, x, log=False):
     if not self.training:
       print("before: x", x.shape)
-    if not args.enable_clip:
+    if not self.args.enable_clip:
       x = self.convs(x)
     if not self.training:
       print("after x", x.shape)
