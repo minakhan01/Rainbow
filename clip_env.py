@@ -45,7 +45,7 @@ class ClipEnv():
 
   def get_clip_features(self, images):
     with torch.no_grad():
-      image_features = self.clip_model.encode_image(self.preprocess(images))
+      image_features = self.clip_model.encode_image(self.preprocess(images)).float()
     return image_features
 
   def _reset_buffer(self):
