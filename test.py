@@ -7,11 +7,14 @@ from plotly.graph_objs.scatter import Line
 import torch
 
 from env import Env
-
+from clip_env import ClipEnv
 
 # Test DQN
 def test(args, T, dqn, val_mem, metrics, results_dir, evaluate=False):
-  env = Env(args)
+  if args.enable_clip:
+    env = ClipEnv(args)
+  else:
+    env = Env(args)
   env.eval()
   metrics['steps'].append(T)
   T_rewards, T_Qs = [], []
