@@ -73,7 +73,8 @@ class DQN(nn.Module):
   def forward(self, x, log=False):
     if not self.training:
       print("before: x", x.shape)
-    x = self.convs(x)
+    if not args.enable_clip:
+      x = self.convs(x)
     if not self.training:
       print("after x", x.shape)
     x = x.view(-1, self.conv_output_size)
