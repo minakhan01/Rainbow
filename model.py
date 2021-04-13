@@ -53,10 +53,10 @@ class DQN(nn.Module):
     self.action_space = action_space
     self.args = args
     if args.enable_clip:
-      if args.clip_layer == 1:
+      if args.num_clip_layer == 1:
         self.dense = nn.Sequential([nn.Linear(2048, args.hidden_size), nn.ReLU()])
         self.conv_output_size = args.hidden_size
-      elif args.clip_layer > 1:
+      elif args.num_clip_layer > 1:
         self.dense = nn.Sequential([nn.Linear(2048, args.hidden_size), nn.ReLU()]+[nn.Linear(args.hidden_size, args.hidden_size), nn.ReLU()]*(args.clip_layer-1))
         self.conv_output_size = args.hidden_size
       else:
