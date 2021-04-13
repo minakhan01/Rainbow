@@ -13,6 +13,7 @@ from tqdm import trange
 
 from agent import Agent
 from env import Env
+from clip_env import ClipEnv
 from memory import ReplayMemory
 from test import test
 
@@ -101,7 +102,7 @@ def save_memory(memory, memory_path, disable_bzip):
 
 
 # Environment
-env = Env(args)
+env = ClipEnv(args)
 env.train()
 action_space = env.action_space()
 
