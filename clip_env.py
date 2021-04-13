@@ -8,11 +8,12 @@ from torch.nn import functional as F
 import clip
 from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize
 from PIL import Image
+import numpy as np
 
 class ClipEnv():
   
   def __init__(self, args):
-    print("In init")
+    # print("In init")
     self.device = args.device
     self.ale = atari_py.ALEInterface()
     self.ale.setInt('random_seed', args.seed)
@@ -32,62 +33,26 @@ class ClipEnv():
     self.clip_model, self.preprocess = clip.load("ViT-B/32", device=self.device)
 
   def _get_state(self):
-    print("_get_state")
-    # state = cv2.resize(self.ale.getScreenGrayscale(), (224, 224), interpolation=cv2.INTER_LINEAR)
+    # print("_get_state")
     ale_image = self.ale.getScreenRGB() # (210, 160, 3)
-    # torch_image = torch.Tensor(Image.fromarray(ale_image))
+    image_features = self.get_clip_features(ale_image)
+    return image_features
+
+  def get_clip_features(self, ale_image):
     image = self.preprocess(Image.fromarray(ale_image)).unsqueeze(0).to(self.device)
     image_features = []
     with torch.no_grad():
       image_features = self.clip_model.encode_image(image)
     return image_features
-    # screen_tensor = torch.tensor(ale_shape, dtype=torch.float32, device=self.device).div_(255) # torch.Size([210, 160, 3])
-    # screen_tensor_permuted = screen_tensor.permute(2, 0, 1) # torch.Size([3, 210, 160])
-    # padded_state = self._pad_observation(screen_tensor_permuted)
-    # embeddings = self.get_clip_embedding(padded_state)
-    # print("_get_state embeddings shape", embeddings.shape)
-    # state = padded_state
-    # print("padded_state shape", padded_state.shape)
-    # return state
-
-  def get_clip_embedding(self, image):
-    print("get_clip_embedding")
-    image_features = []
-    with torch.no_grad():
-      print("image shape", image.shape)
-      image_features = self.clip_model.encode_image(image).unsqueeze(0).to(self.device) # float()
-      print("get_clip_embedding image_features shape", image_features.shape)
-    # image_features = self._encode(image)
-    return image_features
-
-  def _pad_observation(self, image):
-    print("_pad_observation")
-    ale_shape = (3, 210, 160) # image.shape = 210, 160
-    preprocess = Compose([
-    Resize(224, interpolation=Image.BICUBIC),
-    CenterCrop(224),
-    # ToTensor()
-    ])
-    # pad_width = ((224 - ale_shape[1])//2, (224 - ale_shape[1])//2, (224 - ale_shape[0])//2, (224 - ale_shape[0])//2, 0, 0)
-    # padded_image = F.pad(image, pad=pad_width, mode='constant', value=0) # torch.Size([3, 430, 174])
-    resized_image = preprocess(image)
-    # print("padded_image shape constant", padded_image.shape)
-    print("resized_image shape constant", resized_image.shape)  # torch.Size([3, 224, 224])
-    return resized_image
-
-  def _encode(self, images):
-    print("_encode")
-    embeddings = self.clip_model(torch.Tensor(images))
-    return embeddings
 
   def _reset_buffer(self):
-    print("_reset_buffer")
+    # print("_reset_buffer")
     for _ in range(self.window):
       # TODO don't hard-code
-      self.state_buffer.append(torch.zeros(3, 224, 224, device=self.device))
+      self.state_buffer.append(torch.zeros(1, 512, device=self.device))
 
   def reset(self):
-    print("reset")
+    # print("reset")
     if self.life_termination:
       self.life_termination = False  # Reset flag
       self.ale.act(0)  # Use a no-op after loss of life
@@ -107,9 +72,9 @@ class ClipEnv():
     return torch.stack(list(self.state_buffer), 0)
 
   def step(self, action):
-    print("step")
+    # print("step")
     # Repeat action 4 times, max pool over last 2 frames
-    frame_buffer = torch.zeros(2, 3, 224, 224, device=self.device)
+    frame_buffer = torch.zeros(2, 1, 512, device=self.device)
     reward, done = 0, False
     for t in range(4):
       reward += self.ale.act(self.actions.get(action))
@@ -129,28 +94,29 @@ class ClipEnv():
         self.life_termination = not done  # Only set flag when not truly done
         done = True
       self.lives = lives
+    # print("self.state_buffer shape", np.array(self.state_buffer).shape)
     # Return state, reward, done
     return torch.stack(list(self.state_buffer), 0), reward, done
 
   # Uses loss of life as terminal signal
   def train(self):
-    print("train")
+    # print("train")
     self.training = True
 
   # Uses standard terminal signal
   def eval(self):
-    print("eval")
+    # print("eval")
     self.training = False
 
   def action_space(self):
-    print("action_space")
+    # print("action_space")
     return len(self.actions)
 
   def render(self):
-    print("render")
+    # print("render")
     cv2.imshow('screen', self.ale.getScreenRGB()[:, :, ::-1])
     cv2.waitKey(1)
 
   def close(self):
-    print("close")
+    # print("close")
     cv2.destroyAllWindows()
