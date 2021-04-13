@@ -62,10 +62,10 @@ class DQN(nn.Module):
     self.args = args
     if args.enable_clip:
       if args.num_clip_layer == 1:
-        self.dense = nn.Sequential(*[PrintLayer(), nn.Linear(2048, args.hidden_size), nn.ReLU()])
+        self.dense = nn.Sequential(*[nn.Linear(2048, args.hidden_size), nn.ReLU()])
         self.conv_output_size = args.hidden_size
       elif args.num_clip_layer > 1:
-        self.dense = nn.Sequential(*([PrintLayer(), nn.Linear(2048, args.hidden_size), nn.ReLU()]+[PrintLayer(), nn.Linear(args.hidden_size, args.hidden_size), nn.ReLU()]*(args.clip_layer-1)))
+        self.dense = nn.Sequential(*([nn.Linear(2048, args.hidden_size), nn.ReLU()]+[nn.Linear(args.hidden_size, args.hidden_size), nn.ReLU()]*(args.clip_layer-1)))
         self.conv_output_size = args.hidden_size
       else:
         self.dense = nn.Identity()
@@ -90,7 +90,6 @@ class DQN(nn.Module):
     #   print("before: x", x.shape)
     if self.args.enable_clip:
       if self.args.num_clip_layer >= 1:
-        print("flatten self.args.num_clip_layer >= 1")
         x = x.view(-1, 2048)
       x = self.dense(x)
     else:
