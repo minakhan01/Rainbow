@@ -30,26 +30,29 @@ class ClipEnv():
     self.state_buffer = deque([], maxlen=args.history_length)
     self.training = True  # Consistent with model training mode
     self.device = "cuda" if torch.cuda.is_available() else "cpu"
-    self.clip_model, self.preprocess = clip.load("ViT-B/32", device=self.device)
+    self.clip_model, _ = clip.load("ViT-B/32", device=self.device)
+    self.preprocess = Normalize(
+      (0.48145466, 0.4578275, 0.40821073),
+      (0.26862954, 0.26130258, 0.27577711))
 
   def _get_state(self):
     # print("_get_state")
     ale_image = self.ale.getScreenRGB() # (210, 160, 3)
-    image_features = self.get_clip_features(ale_image)
-    return image_features
+    tensor = torch.tensor(ale_image, device=self.device, dtype=torch.float32)
+    tensor = tensor.div_(255)
+    permuted = tensor.permute(2, 0, 1).unsqueeze(0)
+    return F.interpolate(permuted, size=224, mode='bicubic').squeeze(0)
 
-  def get_clip_features(self, ale_image):
-    image = self.preprocess(Image.fromarray(ale_image)).unsqueeze(0).to(self.device)
-    image_features = []
+  def get_clip_features(self, images):
     with torch.no_grad():
-      image_features = self.clip_model.encode_image(image)
+      image_features = self.clip_model.encode_image(self.preprocess(images))
     return image_features
 
   def _reset_buffer(self):
     # print("_reset_buffer")
     for _ in range(self.window):
       # TODO don't hard-code
-      self.state_buffer.append(torch.zeros(1, 512, device=self.device))
+      self.state_buffer.append(torch.zeros(3, 224, 224, device=self.device))
 
   def reset(self):
     # print("reset")
@@ -69,12 +72,14 @@ class ClipEnv():
     observation = self._get_state()
     self.state_buffer.append(observation)
     self.lives = self.ale.lives()
-    return torch.stack(list(self.state_buffer), 0)
+    state = self.get_clip_features(torch.stack(list(self.state_buffer), 0))
+    print(state.shape)
+    return state
 
   def step(self, action):
     # print("step")
     # Repeat action 4 times, max pool over last 2 frames
-    frame_buffer = torch.zeros(2, 1, 512, device=self.device)
+    frame_buffer = torch.zeros(2, 3, 224, 224, device=self.device)
     reward, done = 0, False
     for t in range(4):
       reward += self.ale.act(self.actions.get(action))
@@ -96,7 +101,8 @@ class ClipEnv():
       self.lives = lives
     # print("self.state_buffer shape", np.array(self.state_buffer).shape)
     # Return state, reward, done
-    return torch.stack(list(self.state_buffer), 0), reward, done
+    state = self.get_clip_features(torch.stack(list(self.state_buffer), 0))
+    return state, reward, done
 
   # Uses loss of life as terminal signal
   def train(self):
