@@ -74,7 +74,7 @@ class ClipEnv():
     self.lives = self.ale.lives()
     state = self.get_clip_features(torch.stack(list(self.state_buffer), 0))
     print(state.shape)
-    return state.view(-1, 2048)
+    return state
 
   def step(self, action):
     # print("step")
@@ -102,7 +102,7 @@ class ClipEnv():
     # print("self.state_buffer shape", np.array(self.state_buffer).shape)
     # Return state, reward, done
     state = self.get_clip_features(torch.stack(list(self.state_buffer), 0))
-    return state.view(-1, 2048), reward, done
+    return state, reward, done
 
   # Uses loss of life as terminal signal
   def train(self):
