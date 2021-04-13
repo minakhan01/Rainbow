@@ -28,18 +28,37 @@ class ClipEnv():
     self.window = args.history_length  # Number of frames to concatenate
     self.state_buffer = deque([], maxlen=args.history_length)
     self.training = True  # Consistent with model training mode
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    self.clip_model, _ = clip.load("ViT-B/32", device=device)
+    self.device = "cuda" if torch.cuda.is_available() else "cpu"
+    self.clip_model, self.preprocess = clip.load("ViT-B/32", device=self.device)
 
   def _get_state(self):
     print("_get_state")
-    state = cv2.resize(self.ale.getScreenGrayscale(), (224, 224), interpolation=cv2.INTER_LINEAR)
-    # ale_shape = self.ale.getScreenRGB() # (210, 160, 3)
+    # state = cv2.resize(self.ale.getScreenGrayscale(), (224, 224), interpolation=cv2.INTER_LINEAR)
+    ale_image = self.ale.getScreenRGB() # (210, 160, 3)
+    # torch_image = torch.Tensor(Image.fromarray(ale_image))
+    image = self.preprocess(Image.fromarray(ale_image)).unsqueeze(0).to(self.device)
+    image_features = []
+    with torch.no_grad():
+      image_features = self.clip_model.encode_image(image)
+    return image_features
     # screen_tensor = torch.tensor(ale_shape, dtype=torch.float32, device=self.device).div_(255) # torch.Size([210, 160, 3])
     # screen_tensor_permuted = screen_tensor.permute(2, 0, 1) # torch.Size([3, 210, 160])
     # padded_state = self._pad_observation(screen_tensor_permuted)
+    # embeddings = self.get_clip_embedding(padded_state)
+    # print("_get_state embeddings shape", embeddings.shape)
+    # state = padded_state
     # print("padded_state shape", padded_state.shape)
-    return state
+    # return state
+
+  def get_clip_embedding(self, image):
+    print("get_clip_embedding")
+    image_features = []
+    with torch.no_grad():
+      print("image shape", image.shape)
+      image_features = self.clip_model.encode_image(image).unsqueeze(0).to(self.device) # float()
+      print("get_clip_embedding image_features shape", image_features.shape)
+    # image_features = self._encode(image)
+    return image_features
 
   def _pad_observation(self, image):
     print("_pad_observation")
@@ -53,7 +72,7 @@ class ClipEnv():
     # padded_image = F.pad(image, pad=pad_width, mode='constant', value=0) # torch.Size([3, 430, 174])
     resized_image = preprocess(image)
     # print("padded_image shape constant", padded_image.shape)
-    print("resized_image shape constant", resized_image.shape)
+    print("resized_image shape constant", resized_image.shape)  # torch.Size([3, 224, 224])
     return resized_image
 
   def _encode(self, images):
