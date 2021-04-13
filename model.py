@@ -67,9 +67,9 @@ class DQN(nn.Module):
     self.fc_z_a = NoisyLinear(args.hidden_size, action_space * self.atoms, std_init=args.noisy_std)
 
   def forward(self, x, log=False):
-    # print("before: x", x.shape)
+    print("before: x", x.shape)
     x = self.convs(x)
-    # print("after x", x.shape)
+    print("after x", x.shape)
     x = x.view(-1, self.conv_output_size)
     v = self.fc_z_v(F.relu(self.fc_h_v(x)))  # Value stream
     a = self.fc_z_a(F.relu(self.fc_h_a(x)))  # Advantage stream
