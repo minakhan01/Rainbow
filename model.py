@@ -43,7 +43,6 @@ class NoisyLinear(nn.Module):
     if self.training:
       return F.linear(input, self.weight_mu + self.weight_sigma * self.weight_epsilon, self.bias_mu + self.bias_sigma * self.bias_epsilon)
     else:
-      print("NOT training")
       return F.linear(input, self.weight_mu, self.bias_mu)
 
 
