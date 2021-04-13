@@ -164,15 +164,15 @@ else:
       if T % args.replay_frequency == 0:
         dqn.learn(mem)  # Train with n-step distributional double-Q learning
 
-      # if T % args.evaluation_interval == 0:
-      dqn.eval()  # Set DQN (online network) to evaluation mode
-      avg_reward, avg_Q = test(args, T, dqn, val_mem, metrics, results_dir)  # Test
-      log('T = ' + str(T) + ' / ' + str(args.T_max) + ' | Avg. reward: ' + str(avg_reward) + ' | Avg. Q: ' + str(avg_Q))
-      dqn.train()  # Set DQN (online network) back to training mode
+      if T % args.evaluation_interval == 0:
+        dqn.eval()  # Set DQN (online network) to evaluation mode
+        avg_reward, avg_Q = test(args, T, dqn, val_mem, metrics, results_dir)  # Test
+        log('T = ' + str(T) + ' / ' + str(args.T_max) + ' | Avg. reward: ' + str(avg_reward) + ' | Avg. Q: ' + str(avg_Q))
+        dqn.train()  # Set DQN (online network) back to training mode
 
-      # If memory path provided, save it
-      if args.memory is not None:
-        save_memory(mem, args.memory, args.disable_bzip_memory)
+        # If memory path provided, save it
+        if args.memory is not None:
+          save_memory(mem, args.memory, args.disable_bzip_memory)
 
       # Update target network
       if T % args.target_update == 0:
