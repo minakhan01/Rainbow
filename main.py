@@ -58,7 +58,7 @@ parser.add_argument('--checkpoint-interval', default=0, help='How often to check
 parser.add_argument('--memory', help='Path to save/load the memory from')
 parser.add_argument('--disable-bzip-memory', action='store_true', help='Don\'t zip the memory file. Not recommended (zipping is a bit slower and much, much smaller)')
 parser.add_argument('--enable-clip', action='store_true', help='Use CLIP features')
-
+parser.add_argument('--num-clip-layer', type=int, default=0, action='store_true', help='clip model layers')
 # Setup
 args = parser.parse_args()
 

@@ -53,7 +53,15 @@ class DQN(nn.Module):
     self.action_space = action_space
     self.args = args
     if args.enable_clip:
-      self.conv_output_size = 2048
+      if args.clip_layer == 1:
+        self.dense = nn.Sequential([nn.Linear(2048, args.hidden_size), nn.ReLU()])
+        self.conv_output_size = args.hidden_size
+      elif args.clip_layer > 1:
+        self.dense = nn.Sequential([nn.Linear(2048, args.hidden_size), nn.ReLU()]+[nn.Linear(args.hidden_size, args.hidden_size), nn.ReLU()]*(args.clip_layer-1))
+        self.conv_output_size = args.hidden_size
+      else:
+        self.dense = nn.Identity()
+        self.conv_output_size = 2048
     else:
       if args.architecture == 'canonical':
         self.convs = nn.Sequential(nn.Conv2d(args.history_length, 32, 8, stride=4, padding=0), nn.ReLU(),
@@ -72,10 +80,10 @@ class DQN(nn.Module):
   def forward(self, x, log=False):
     # if not self.training:
     #   print("before: x", x.shape)
-    if not self.args.enable_clip:
+    if self.args.enable_clip:
+      x = self.dense(x)
+    else:
       x = self.convs(x)
-    # if not self.training:
-    #   print("after x", x.shape)
     x = x.view(-1, self.conv_output_size)
     v = self.fc_z_v(F.relu(self.fc_h_v(x)))  # Value stream
     a = self.fc_z_a(F.relu(self.fc_h_a(x)))  # Advantage stream
