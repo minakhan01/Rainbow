@@ -52,6 +52,7 @@ class PrintLayer(nn.Module):
     def forward(self, x):
         # Do your print / debug stuff here
         print(x.shape)
+        print("forward")
         return x
 
 class DQN(nn.Module):
@@ -60,14 +61,18 @@ class DQN(nn.Module):
     self.atoms = args.atoms
     self.action_space = action_space
     self.args = args
+    print("before enable_clip")
     if args.enable_clip:
       if args.num_clip_layer == 1:
+        print("args.num_clip_layer == 1")
         self.dense = nn.Sequential(*[PrintLayer(), nn.Linear(args.hidden_size, 2048), nn.ReLU()])
         self.conv_output_size = args.hidden_size
       elif args.num_clip_layer > 1:
+        print("args.num_clip_layer > 1")
         self.dense = nn.Sequential(*([PrintLayer(), nn.Linear(args.hidden_size, 2048), nn.ReLU()]+[PrintLayer(), nn.Linear(args.hidden_size, args.hidden_size), nn.ReLU()]*(args.clip_layer-1)))
         self.conv_output_size = args.hidden_size
       else:
+        print("else")
         self.dense = nn.Identity()
         self.conv_output_size = 2048
     else:
