@@ -4,7 +4,7 @@ import random
 import atari_py
 import cv2
 import torch
-
+import numpy as np
 
 class Env():
   def __init__(self, args):
@@ -23,10 +23,23 @@ class Env():
     self.window = args.history_length  # Number of frames to concatenate
     self.state_buffer = deque([], maxlen=args.history_length)
     self.training = True  # Consistent with model training mode
+    self.previous = None
+    self.counter = 0
 
   def _get_state(self):
+    ale_screen_rgb = self.ale.getScreenRGB()
+    if self.previous is not None:
+      max_pooled = np.array([self.previous, ale_screen_rgb]).max(axis=0)
+    else:
+      max_pooled = ale_screen_rgb
+    self.previous = ale_screen_rgb
+    self.save(max_pooled)
     state = cv2.resize(self.ale.getScreenGrayscale(), (84, 84), interpolation=cv2.INTER_LINEAR)
     return torch.tensor(state, dtype=torch.float32, device=self.device).div_(255)
+
+  def save(self, max_pooled):
+    np.save(f"images/{counter}.npy", max_pooled)
+    self.counter +=1
 
   def _reset_buffer(self):
     for _ in range(self.window):
