@@ -38,7 +38,7 @@ class Env():
     return torch.tensor(state, dtype=torch.float32, device=self.device).div_(255)
 
   def save(self, max_pooled):
-    np.save(f"images/{counter}.npy", max_pooled)
+    np.save(f"images/{self.counter}.npy", max_pooled)
     self.counter +=1
 
   def _reset_buffer(self):
